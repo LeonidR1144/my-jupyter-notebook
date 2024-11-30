@@ -1,0 +1,38 @@
+import pandas as pd
+import numpy as np
+import re
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+data = pd.read_csv('/Users/leonidrudnik/Downloads/train.csv')
+
+data.index = data.PassengerId
+data = data.drop(['PassengerId'], axis=1)
+data['HasCabin'] = data['Cabin'].apply(lambda x: 1 if type(x) == str else 0)
+#print(data[['HasCabin', 'Cabin']].head(20))
+data['FamilySize'] = data['SibSp'] + data['Parch']+1
+data['Is_alone'] = data['FamilySize'].apply(lambda x: 0 if x > 1 else 1)
+#print(data.columns.to_list())
+
+def get_title(name):
+    title_search = re.search(' ([A-Za-z]+)\.', name)
+    if title_search:
+        return title_search.group(1)
+    return ""
+
+data['Title'] = data['Name'].apply(get_title)
+
+data['Title'] = data['Title'].replace( ['Lady', 'Countess','Capt', 'Col','Don', 'Dr', 'Major', 'Rev', 'Sir', 'Jonkheer', 'Dona'],  'Rare')
+data['Title'] = data['Title'].replace('Mlle', 'Miss')
+data['Title'] = data['Title'].replace('Ms', 'Miss')
+data['Title'] = data['Title'].replace('Mme', 'Mrs')
+
+data = data.drop(['Cabin','Ticket','Name'], axis=1)
+
+plt.figure(figsize=(10,8))
+plt.title('Проверка сбалансированности данных по выжившим', fontsize=16)
+sns.countplot(x='Survived', data=data)
+
+plt.figure(figsize=(10,8))
+plt.title('Проверка сбалансированности данных по полу', fontsize=16)
+sns.countplot(x='Sex', data=data)
